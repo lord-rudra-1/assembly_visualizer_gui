@@ -21,9 +21,13 @@ struct system {
 
 extern struct system machine;
 
+/* Machine functions */
 void init_machine(uint64_t stack_top, uint64_t pc_start, char *code_path);
 void grow_stack(uint64_t addr);
 void print_machine();
 void execute(char **instruction);
+
+/* Code loading functions */
+void load_code(char *filepath);
 
 #endif // __MACHINE_H__
