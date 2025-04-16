@@ -1,33 +1,46 @@
+CC = gcc
+CFLAGS = -Wall -Wextra -g
+LDFLAGS = 
+
+# Detect operating system
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+    LDFLAGS += -lSDL2 -lSDL2_ttf -lm
+endif
+ifeq ($(UNAME_S),Darwin)
+    LDFLAGS += -lSDL2 -lSDL2_ttf
+endif
+ifeq ($(OS),Windows_NT)
+    LDFLAGS += -lmingw32 -lSDL2main -lSDL2 -lSDL2_ttf
+endif
+
+# Source files
+SRC = visualizer_gui.c machine.c instructions.c parse.c code.c
+OBJ = $(SRC:.c=.o)
+DEPS = machine.h instructions.h parse.h code.h
+
+# Targets
+all: assembly_visualizer_gui
+
+assembly_visualizer_gui: $(OBJ)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+%.o: %.c $(DEPS)
+	$(CC) $(CFLAGS) -c $< -o $@
+
 .PHONY: clean
-CC=clang
-CFLAGS=-I./include -g -Wall --std=gnu11 -fpic
-SRC_DIR=src
-CORE_DIR=$(SRC_DIR)/core
-INSTR_DIR=$(SRC_DIR)/instructions
-UTILS_DIR=$(SRC_DIR)/utils
-TEST_DIR=tests
-BUILD_DIR=build
-SRCS=$(CORE_DIR)/machine.c $(CORE_DIR)/parse.c $(INSTR_DIR)/instructions.c
-OBJS=$(patsubst %.c,%.o,$(SRCS))
-PROGRAM=simulator
-TESTS=test_parse test_instructions test_functions
-
-all: dirs $(PROGRAM) $(TESTS) 
-
-dirs:
-	mkdir -p $(BUILD_DIR)
-
-$(PROGRAM): $(OBJS) $(SRC_DIR)/simulator.o
-	$(CC) -o $@ $^ $(LDFLAGS)
-
-test_%: $(OBJS) $(TEST_DIR)/test_%.o
-	$(CC) -o $@ $^ $(LDFLAGS)
 
 clean:
-	rm -f $(SRC_DIR)/*.o $(CORE_DIR)/*.o $(INSTR_DIR)/*.o $(UTILS_DIR)/*.o $(TEST_DIR)/*.o $(PROGRAM) $(TESTS)
+	rm -f assembly_visualizer_gui $(OBJ)
 
-%.o: %.c
-	$(CC) -c -o $@ $< $(CFLAGS)
-
-lib%.so: $(OBJS)
-	$(CC) -shared -o $@ $^ $(LDFLAGS)
+# Install SDL2 dependencies based on OS
+install-deps:
+ifeq ($(UNAME_S),Linux)
+	sudo apt-get update && sudo apt-get install -y libsdl2-dev libsdl2-ttf-dev
+endif
+ifeq ($(UNAME_S),Darwin)
+	brew install sdl2 sdl2_ttf
+endif
+ifeq ($(OS),Windows_NT)
+	@echo "On Windows, please install MinGW and SDL2/SDL2_ttf development libraries manually"
+endif 

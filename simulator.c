@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include "machine.h"
 #include "parse.h"
+#include "code.h"
 
 int main(int argc, char **argv) {
 
