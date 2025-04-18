@@ -121,7 +121,7 @@ export default function CpuSimulator() {
       <div className="flex items-center justify-between mb-6 bg-card p-4 rounded-lg shadow-sm border">
         <h1 className="text-3xl font-bold flex items-center gap-2">
           <Cpu className="h-8 w-8 text-primary" />
-          <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">CPU Simulator & Visualizer</span>
+          <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">Assembly & CPU Visualizer</span>
         </h1>
         <div className="flex items-center gap-2">
           
