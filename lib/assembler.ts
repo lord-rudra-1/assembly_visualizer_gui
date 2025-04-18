@@ -53,6 +53,138 @@ function parseOperand(operand: string): { type: "register" | "immediate" | "memo
   }
 }
 
+// Convert machine code instruction to 16-bit binary
+export function toBinaryInstruction(instruction: string): string {
+  // Opcodes (4 bits)
+  const opcodes: Record<string, string> = {
+    MOV: '0001',
+    ADD: '0010',
+    SUB: '0011',
+    MUL: '0100',
+    DIV: '0101',
+    CMP: '0110',
+    JMP: '0111',
+    JZ: '1000',
+    JNZ: '1001',
+  }
+
+  // Extract operation and operands
+  const parts = instruction.split(' ')
+  const operation = parts[0]
+  let binary = ''
+
+  // Add opcode (4 bits)
+  binary += opcodes[operation] || '0000'
+
+  // Process based on instruction type
+  if (operation === 'MOV') {
+    // Format: MOV dest, src
+    const destSrc = parts.slice(1).join(' ').split(', ')
+    
+    if (destSrc.length === 2) {
+      const dest = destSrc[0]
+      const src = destSrc[1]
+      
+      // Destination register or memory (3 bits)
+      if (dest.startsWith('R')) {
+        const regNum = parseInt(dest.substring(1))
+        binary += regNum.toString(2).padStart(3, '0')
+      } else if (dest.startsWith('[')) {
+        binary += '111' // Memory address indicator
+      } else {
+        binary += '000' // Default
+      }
+      
+      // Source register or immediate (3 bits + 6 bits for value/address)
+      if (src.startsWith('R')) {
+        binary += '0' // Register indicator
+        const regNum = parseInt(src.substring(1))
+        binary += regNum.toString(2).padStart(3, '0')
+        binary += '000000' // Padding
+      } else if (src.startsWith('[')) {
+        binary += '1' // Memory indicator
+        const addr = parseInt(src.substring(1, src.length - 1))
+        binary += addr.toString(2).padStart(9, '0').substring(0, 9)
+      } else {
+        binary += '0' // Immediate indicator
+        const value = parseInt(src)
+        binary += '000' // Padding
+        binary += value.toString(2).padStart(6, '0').substring(0, 6)
+      }
+    }
+  } else if (['ADD', 'SUB', 'MUL', 'DIV'].includes(operation)) {
+    // Format: ADD dest, src1, src2
+    const operands = parts.slice(1).join(' ').split(', ')
+    
+    if (operands.length === 3) {
+      const [dest, src1, src2] = operands
+      
+      // Destination register (3 bits)
+      if (dest.startsWith('R')) {
+        const regNum = parseInt(dest.substring(1))
+        binary += regNum.toString(2).padStart(3, '0')
+      } else {
+        binary += '000' // Default
+      }
+      
+      // Source 1 register (3 bits)
+      if (src1.startsWith('R')) {
+        const regNum = parseInt(src1.substring(1))
+        binary += regNum.toString(2).padStart(3, '0')
+      } else {
+        binary += '000' // Default
+      }
+      
+      // Source 2 register (3 bits)
+      if (src2.startsWith('R')) {
+        const regNum = parseInt(src2.substring(1))
+        binary += regNum.toString(2).padStart(3, '0')
+      } else {
+        binary += '000' // Default
+      }
+      
+      // Padding (3 bits)
+      binary += '000'
+    }
+  } else if (operation === 'CMP') {
+    // Format: CMP reg1, reg2
+    const operands = parts.slice(1).join(' ').split(', ')
+    
+    if (operands.length === 2) {
+      const [reg1, reg2] = operands
+      
+      // Register 1 (3 bits)
+      if (reg1.startsWith('R')) {
+        const regNum = parseInt(reg1.substring(1))
+        binary += regNum.toString(2).padStart(3, '0')
+      } else {
+        binary += '000' // Default
+      }
+      
+      // Register 2 (3 bits)
+      if (reg2.startsWith('R')) {
+        const regNum = parseInt(reg2.substring(1))
+        binary += regNum.toString(2).padStart(3, '0')
+      } else {
+        binary += '000' // Default
+      }
+      
+      // Padding (6 bits)
+      binary += '000000'
+    }
+  } else if (['JMP', 'JZ', 'JNZ'].includes(operation)) {
+    // Format: JMP address
+    const address = parts[1]
+    
+    // Address (12 bits)
+    const addr = parseInt(address)
+    binary += addr.toString(2).padStart(12, '0').substring(0, 12)
+  }
+  
+  // Ensure the binary string is exactly 16 bits
+  return binary.padEnd(16, '0').substring(0, 16)
+}
+
 // Assemble the code into machine code
 export function assembleCode(code: string) {
   const lines = code.split("\n").filter((line) => line.trim() !== "")
@@ -167,7 +299,11 @@ export function assembleCode(code: string) {
     }
   })
 
-  return { machineCode, labels }
+  // Generate binary representation for each instruction
+  const binaryRepresentations = machineCode.map(instruction => toBinaryInstruction(instruction))
+
+  // Return the assembled machine code, binary code, and labels
+  return { machineCode, binaryCode: binaryRepresentations, labels }
 }
 
 // Execute a single instruction
