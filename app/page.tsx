@@ -10,6 +10,8 @@ import CpuVisualization from "@/components/cpu-visualization"
 import MemoryVisualization from "@/components/memory-visualization"
 import { assembleCode, executeInstruction, initialCpuState } from "@/lib/assembler"
 
+import Link from "next/link"
+
 export default function CpuSimulator() {
   const [assemblyCode, setAssemblyCode] = useState(
     "MOV R1, 10\nMOV R2, 5\nADD R3, R1, R2\nSUB R4, R1, R2\nMUL R5, R1, R2\nMOV [100], R3\nMOV [101], R5\nMOV R6, [100]",
@@ -124,7 +126,11 @@ export default function CpuSimulator() {
           <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">Assembly & CPU Visualizer</span>
         </h1>
         <div className="flex items-center gap-2">
-          
+          <Link href="/documentation" passHref legacyBehavior>
+            <Button className="bg-primary text-white px-5 py-2 rounded-lg font-semibold shadow hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/40">
+              Get Documentation
+            </Button>
+          </Link>
         </div>
       </div>
 
